@@ -4,6 +4,9 @@ import Home from './pages/Home';
 import Menu from './pages/Menu';
 import Traiteur from './pages/Traiteur';
 import Reservation from './pages/Reservation';
+import MentionsLegales from './pages/MentionsLegales';
+import Confidentialite from './pages/Confidentialite';
+import ScrollToTop from './components/ScrollToTop';
 
 export default function App() {
   const [scrolled, setScrolled] = useState(false);
@@ -15,13 +18,30 @@ export default function App() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const linkClass = ({ isActive }) =>
-    `hover-underline text-sm tracking-widest uppercase transition-colors duration-200 ${
-      isActive ? 'text-gold' : 'text-stone-300 hover:text-stone-100'
-    }`;
+  const tickLink = (to, index, label, end) => (
+    <NavLink to={to} end={end}>
+      {({ isActive }) => (
+        <span
+          className="nav-tick"
+          data-active={isActive}
+        >
+          <span className={`nav-index ${isActive ? 'text-gold' : ''}`}>{index}</span>
+          <span
+            className={`text-sm tracking-widest uppercase transition-colors duration-200 ${
+              isActive ? 'text-gold' : 'text-stone-300 hover:text-stone-100'
+            }`}
+          >
+            {label}
+          </span>
+          <span className="nav-line"></span>
+        </span>
+      )}
+    </NavLink>
+  );
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen" style={{ background: 'var(--dark)', color: 'var(--text)' }}>
 
         {/* NAV */}
@@ -35,48 +55,79 @@ export default function App() {
             borderBottom: scrolled ? '1px solid rgba(201,168,76,0.12)' : 'none',
           }}
         >
-          <div className="max-w-7xl mx-auto flex justify-between items-center px-8 py-5">
-            <NavLink to="/" className="font-display text-xl font-light tracking-[0.15em] text-gold-gradient">
-              La Rose Libanaise
+          {/* Desktop: three-column layout, logo centered between the links */}
+          <div className="hidden md:grid grid-cols-3 items-center max-w-7xl mx-auto px-8 py-5">
+            <div className="flex items-center gap-10 justify-start">
+              {tickLink('/', 'I', 'Accueil', true)}
+              {tickLink('/menu', 'II', 'Carte')}
+            </div>
+
+            <NavLink to="/" className="relative flex justify-center items-center gap-3 group">
+              <span className="logo-mark">
+                <span className="logo-ornament"></span>
+              </span>
+              <span className="font-display text-xl font-light tracking-[0.15em] text-gold-gradient">
+                La Rose Libanaise
+              </span>
             </NavLink>
 
-            {/* Desktop */}
-            <div className="hidden md:flex items-center gap-10">
-              <NavLink to="/" className={linkClass} end>Accueil</NavLink>
-              <NavLink to="/menu" className={linkClass}>Carte</NavLink>
-              <NavLink to="/traiteur" className={linkClass}>Traiteur</NavLink>
+            <div className="flex items-center gap-10 justify-end">
+              {tickLink('/traiteur', 'III', 'Traiteur')}
               <NavLink
                 to="/reservation"
-                className="text-sm tracking-widest uppercase px-6 py-2.5 border transition-all duration-300 hover:bg-gold hover:text-black"
-                style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}
+                className="btn-corners text-sm tracking-widest uppercase transition-colors duration-300 hover:text-gold"
+                style={{ color: 'var(--gold)' }}
               >
                 Réserver
               </NavLink>
             </div>
+          </div>
 
-            {/* Mobile burger */}
+          {/* Mobile bar */}
+          <div className="flex md:hidden justify-between items-center px-8 py-5">
+            <NavLink to="/" className="flex items-center gap-3">
+              <span className="logo-mark">
+                <span className="logo-ornament"></span>
+              </span>
+              <span className="font-display text-xl font-light tracking-[0.15em] text-gold-gradient">
+                La Rose Libanaise
+              </span>
+            </NavLink>
             <button
-              className="md:hidden text-gold text-xl"
+              className="text-gold text-xl"
               onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Menu"
             >
               {menuOpen ? '✕' : '☰'}
             </button>
           </div>
 
-          {/* Mobile menu */}
+          {/* Mobile full-screen menu */}
           {menuOpen && (
-            <div
-              className="md:hidden flex flex-col items-center py-8 gap-8 text-sm tracking-widest uppercase"
-              style={{ background: 'rgba(12,9,4,0.97)' }}
-            >
-              <NavLink to="/" onClick={() => setMenuOpen(false)} className={linkClass} end>Accueil</NavLink>
-              <NavLink to="/menu" onClick={() => setMenuOpen(false)} className={linkClass}>Carte</NavLink>
-              <NavLink to="/traiteur" onClick={() => setMenuOpen(false)} className={linkClass}>Traiteur</NavLink>
+            <div className="md:hidden mobile-nav-overlay">
+              {[
+                ['/', 'I', 'Accueil', true],
+                ['/menu', 'II', 'Carte', false],
+                ['/traiteur', 'III', 'Traiteur', false],
+              ].map(([to, index, label, end], i) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  onClick={() => setMenuOpen(false)}
+                  className="mobile-nav-item flex flex-col items-center gap-2"
+                  style={{ animationDelay: `${0.1 + i * 0.08}s` }}
+                >
+                  <span className="nav-index text-xs">{index}</span>
+                  <span className="font-display text-3xl font-light text-stone-200">{label}</span>
+                </NavLink>
+              ))}
+              <div className="gold-line mobile-nav-item" style={{ animationDelay: '0.34s' }}></div>
               <NavLink
                 to="/reservation"
                 onClick={() => setMenuOpen(false)}
-                className="px-6 py-2.5 border"
-                style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}
+                className="btn-corners mobile-nav-item text-sm tracking-widest uppercase"
+                style={{ color: 'var(--gold)', animationDelay: '0.42s' }}
               >
                 Réserver
               </NavLink>
@@ -91,6 +142,8 @@ export default function App() {
             <Route path="/menu" element={<Menu />} />
             <Route path="/traiteur" element={<Traiteur />} />
             <Route path="/reservation" element={<Reservation />} />
+            <Route path="/mentions-legales" element={<MentionsLegales />} />
+            <Route path="/confidentialite" element={<Confidentialite />} />
           </Routes>
         </main>
 
@@ -120,8 +173,15 @@ export default function App() {
               </div>
             </div>
           </div>
-          <div className="text-center py-4 text-xs text-stone-700 border-t" style={{ borderColor: 'rgba(201,168,76,0.08)' }}>
-            © 2026 La Rose Libanaise — Tous droits réservés
+          <div
+            className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 text-center py-4 text-xs text-stone-700 border-t"
+            style={{ borderColor: 'rgba(201,168,76,0.08)' }}
+          >
+            <span>© 2026 La Rose Libanaise — Tous droits réservés</span>
+            <span className="hidden md:inline">·</span>
+            <NavLink to="/mentions-legales" className="hover:text-stone-400 transition-colors">Mentions Légales</NavLink>
+            <span className="hidden md:inline">·</span>
+            <NavLink to="/confidentialite" className="hover:text-stone-400 transition-colors">Politique de Confidentialité</NavLink>
           </div>
         </footer>
       </div>

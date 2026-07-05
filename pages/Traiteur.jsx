@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Tilt from '../components/Tilt';
+import Reveal from '../components/Reveal';
 
 const formules = [
   {
@@ -51,7 +53,7 @@ export default function Traiteur() {
         >
           TRAITEUR
         </div>
-        <div className="max-w-7xl mx-auto relative z-10">
+        <Reveal className="max-w-7xl mx-auto relative z-10">
           <p className="text-xs tracking-widest uppercase mb-4" style={{ color: 'var(--gold)' }}>Service Traiteur</p>
           <h1 className="font-display text-6xl md:text-7xl font-light mb-6">
             Votre Événement,<br />
@@ -60,58 +62,60 @@ export default function Traiteur() {
           <p className="text-stone-400 max-w-xl text-sm leading-relaxed">
             Mariages, fiançailles, anniversaires, événements d'entreprise. Nous prenons en charge tout — de la préparation à la vaisselle — pour que vous profitiez de chaque instant.
           </p>
-        </div>
+        </Reveal>
       </div>
 
       {/* FORMULES */}
       <section className="py-24 px-8 max-w-7xl mx-auto">
-        <div className="flex items-end justify-between mb-16">
+        <Reveal className="flex items-end justify-between mb-16">
           <h2 className="font-display text-4xl font-light">Nos Formules</h2>
           <div className="gold-line" style={{ margin: 0, width: '80px' }} />
-        </div>
+        </Reveal>
 
         <div className="grid md:grid-cols-3 gap-4">
-          {formules.map((f) => (
-            <div
-              key={f.n}
-              onClick={() => setSelectedFormule(f)}
-              className="relative overflow-hidden p-8 cursor-pointer transition-all duration-300"
-              style={{
-                border: `1px solid ${f.highlight || selectedFormule.n === f.n ? 'var(--gold)' : 'rgba(201,168,76,0.15)'}`,
-                background: selectedFormule.n === f.n ? 'rgba(201,168,76,0.06)' : 'var(--surface)',
-                borderRadius: '2px',
-              }}
-            >
-              {f.highlight && (
-                <div
-                  className="absolute top-0 right-0 text-xs tracking-widest uppercase px-3 py-1"
-                  style={{ background: 'var(--gold)', color: '#0c0904' }}
-                >
-                  Populaire
-                </div>
-              )}
-              <div
-                className="font-display text-6xl font-light mb-4"
-                style={{ color: 'rgba(201,168,76,0.25)' }}
+          {formules.map((f, i) => (
+            <Reveal key={f.n} delay={i * 0.1}>
+              <Tilt
+                max={5}
+                onClick={() => setSelectedFormule(f)}
+                className="relative overflow-hidden p-8 cursor-pointer"
+                style={{
+                  border: `1px solid ${f.highlight || selectedFormule.n === f.n ? 'var(--gold)' : 'rgba(201,168,76,0.15)'}`,
+                  background: selectedFormule.n === f.n ? 'rgba(201,168,76,0.06)' : 'var(--surface)',
+                  borderRadius: '2px',
+                }}
               >
-                {f.n}
-              </div>
-              <h3 className="font-display text-2xl font-light mb-1" style={{ color: 'var(--text)' }}>
-                Formule {f.nom}
-              </h3>
-              <p className="font-display text-4xl mb-4" style={{ color: 'var(--gold)' }}>
-                {f.prix}<span className="text-sm font-sans" style={{ color: 'var(--muted)' }}>{f.unite}</span>
-              </p>
-              <p className="text-xs leading-relaxed mb-6" style={{ color: 'var(--muted)' }}>{f.desc}</p>
-              <ul className="space-y-2">
-                {f.items.map((item, j) => (
-                  <li key={j} className="flex items-start gap-2 text-xs" style={{ color: 'var(--text)', opacity: 0.7 }}>
-                    <span style={{ color: 'var(--gold)' }}>—</span> {item}
-                  </li>
-                ))}
-              </ul>
-              <p className="text-xs mt-5" style={{ color: 'var(--muted)' }}>Min. {f.mini} personnes</p>
-            </div>
+                {f.highlight && (
+                  <div
+                    className="absolute top-0 right-0 text-xs tracking-widest uppercase px-3 py-1"
+                    style={{ background: 'var(--gold)', color: '#0c0904' }}
+                  >
+                    Populaire
+                  </div>
+                )}
+                <div
+                  className="font-display text-6xl font-light mb-4"
+                  style={{ color: 'rgba(201,168,76,0.25)' }}
+                >
+                  {f.n}
+                </div>
+                <h3 className="font-display text-2xl font-light mb-1" style={{ color: 'var(--text)' }}>
+                  Formule {f.nom}
+                </h3>
+                <p className="font-display text-4xl mb-4" style={{ color: 'var(--gold)' }}>
+                  {f.prix}<span className="text-sm font-sans" style={{ color: 'var(--muted)' }}>{f.unite}</span>
+                </p>
+                <p className="text-xs leading-relaxed mb-6" style={{ color: 'var(--muted)' }}>{f.desc}</p>
+                <ul className="space-y-2">
+                  {f.items.map((item, j) => (
+                    <li key={j} className="flex items-start gap-2 text-xs" style={{ color: 'var(--text)', opacity: 0.7 }}>
+                      <span style={{ color: 'var(--gold)' }}>—</span> {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs mt-5" style={{ color: 'var(--muted)' }}>Min. {f.mini} personnes</p>
+              </Tilt>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -121,7 +125,7 @@ export default function Traiteur() {
         className="py-24 px-8 clip-diagonal-top"
         style={{ background: 'var(--surface)' }}
       >
-        <div className="max-w-4xl mx-auto">
+        <Reveal className="max-w-4xl mx-auto">
           <p className="text-xs tracking-widest uppercase mb-3 text-center" style={{ color: 'var(--gold)' }}>Outil de budget</p>
           <h2 className="font-display text-4xl font-light text-center mb-16">Estimez en temps réel</h2>
 
@@ -200,27 +204,31 @@ export default function Traiteur() {
               <div className="gold-line mt-8" />
             </div>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* GALERIE EVENTS */}
       <section className="py-24 px-8 max-w-7xl mx-auto">
-        <p className="text-xs tracking-widest uppercase mb-3 text-center" style={{ color: 'var(--gold)' }}>Ils nous ont fait confiance</p>
-        <h2 className="font-display text-4xl font-light text-center mb-16">+500 Événements Réussis</h2>
+        <Reveal className="text-center mb-16">
+          <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'var(--gold)' }}>Ils nous ont fait confiance</p>
+          <h2 className="font-display text-4xl font-light">+500 Événements Réussis</h2>
+        </Reveal>
         <div className="grid grid-cols-3 gap-3">
           {[
             'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=600&q=80',
           ].map((src, i) => (
-            <div key={i} className="overflow-hidden" style={{ height: '250px', borderRadius: '2px' }}>
-              <img
-                src={src}
-                alt="Événement"
-                className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                style={{ filter: 'brightness(0.6) saturate(0.8)' }}
-              />
-            </div>
+            <Reveal key={i} delay={i * 0.08}>
+              <Tilt max={5} className="overflow-hidden" style={{ height: '250px', borderRadius: '2px' }}>
+                <img
+                  src={src}
+                  alt="Événement"
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                  style={{ filter: 'brightness(0.6) saturate(0.8)' }}
+                />
+              </Tilt>
+            </Reveal>
           ))}
         </div>
       </section>

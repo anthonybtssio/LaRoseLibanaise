@@ -1,17 +1,37 @@
 import { Link } from 'react-router-dom';
+import { useRef, useState } from 'react';
+import Tilt from '../components/Tilt';
+import Reveal from '../components/Reveal';
+import Reviews from '../components/Reviews';
 
 const marqueeWords = ['Mezzés · ', 'Grillades · ', 'Mariage · ', 'Authenticité · ', 'Liban · ', 'Traiteur · ', 'Saveurs · '];
 
 export default function Home() {
+  const bgRef = useRef(null);
+  const textRef = useRef(null);
+
+  const onHeroMove = (e) => {
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    const px = (e.clientX / window.innerWidth - 0.5);
+    const py = (e.clientY / window.innerHeight - 0.5);
+    if (bgRef.current) {
+      bgRef.current.style.transform = `scale(1.05) translate(${px * -14}px, ${py * -14}px)`;
+    }
+    if (textRef.current) {
+      textRef.current.style.transform = `translate(${px * 22}px, calc(-50% + ${py * 22}px))`;
+    }
+  };
+
   return (
     <div>
       {/* ══════════ HERO ══════════ */}
-      <section className="relative h-screen flex items-end overflow-hidden grain">
+      <section className="relative h-screen flex items-end overflow-hidden grain" onMouseMove={onHeroMove}>
         <img
+          ref={bgRef}
           src="https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&q=80&w=1800"
           alt="Cuisine libanaise"
           className="absolute inset-0 w-full h-full object-cover scale-105"
-          style={{ filter: 'brightness(0.35)' }}
+          style={{ filter: 'brightness(0.35)', transition: 'transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}
         />
         {/* Gradient overlay */}
         <div
@@ -23,6 +43,7 @@ export default function Home() {
 
         {/* Big background text */}
         <div
+          ref={textRef}
           className="absolute top-1/2 left-0 right-0 -translate-y-1/2 text-center pointer-events-none select-none"
           style={{
             fontSize: 'clamp(80px, 18vw, 240px)',
@@ -31,6 +52,7 @@ export default function Home() {
             color: 'rgba(201,168,76,0.07)',
             letterSpacing: '-0.02em',
             lineHeight: 1,
+            transition: 'transform 0.6s cubic-bezier(0.22,1,0.36,1)',
           }}
         >
           LIBAN
@@ -96,14 +118,14 @@ export default function Home() {
 
       {/* ══════════ CONCEPT (numéroté) ══════════ */}
       <section className="py-28 px-8 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-20">
+        <Reveal className="flex flex-col md:flex-row justify-between items-start gap-4 mb-20">
           <h2 className="font-display text-5xl md:text-6xl font-light" style={{ color: 'var(--text)' }}>
             Notre<br /><span className="italic text-gold-gradient">Savoir-Faire</span>
           </h2>
           <p className="text-stone-500 max-w-xs text-sm leading-relaxed md:text-right mt-4">
             De la table d'à côté à votre grand événement — nous mettons tout notre cœur dans chaque plat, chaque service.
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid md:grid-cols-3 gap-6">
           {[
@@ -122,27 +144,29 @@ export default function Home() {
               desc: 'Tout est préparé chaque jour avec des ingrédients frais. Recettes transmises de génération en génération.',
               img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
             },
-          ].map((item) => (
-            <div key={item.n} className="group relative overflow-hidden" style={{ borderRadius: '2px' }}>
-              <div className="relative h-72 overflow-hidden">
-                <img
-                  src={item.img}
-                  alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  style={{ filter: 'brightness(0.5)' }}
-                />
-                <div
-                  className="absolute top-4 left-4 font-display text-7xl font-light leading-none"
-                  style={{ color: 'rgba(201,168,76,0.4)' }}
-                >
-                  {item.n}
+          ].map((item, i) => (
+            <Reveal key={item.n} delay={i * 0.1}>
+              <Tilt max={6} className="group relative overflow-hidden" style={{ borderRadius: '2px' }}>
+                <div className="relative h-72 overflow-hidden">
+                  <img
+                    src={item.img}
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    style={{ filter: 'brightness(0.5)' }}
+                  />
+                  <div
+                    className="absolute top-4 left-4 font-display text-7xl font-light leading-none"
+                    style={{ color: 'rgba(201,168,76,0.4)' }}
+                  >
+                    {item.n}
+                  </div>
                 </div>
-              </div>
-              <div className="glass p-6 mt-0.5">
-                <h3 className="font-display text-2xl font-light mb-2" style={{ color: 'var(--gold)' }}>{item.title}</h3>
-                <p className="text-stone-400 text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            </div>
+                <div className="glass p-6 mt-0.5">
+                  <h3 className="font-display text-2xl font-light mb-2" style={{ color: 'var(--gold)' }}>{item.title}</h3>
+                  <p className="text-stone-400 text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              </Tilt>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -153,7 +177,7 @@ export default function Home() {
         style={{ background: 'var(--surface)' }}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-16">
+          <Reveal className="flex items-end justify-between mb-16">
             <h2 className="font-display text-5xl font-light">
               <span className="italic text-gold-gradient">Nos</span><br />
               Spécialités
@@ -165,7 +189,7 @@ export default function Home() {
             >
               Voir la carte complète →
             </Link>
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
@@ -174,67 +198,34 @@ export default function Home() {
               { label: 'Buffets Traiteur', sub: 'Plateaux · Cocktails · Réceptions', img: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=500&q=80' },
               { label: 'Pâtisseries', sub: 'Baklava · Knafeh · Maamoul', img: 'https://images.unsplash.com/photo-1519676867240-f03562e64548?auto=format&fit=crop&w=500&q=80', tall: true },
             ].map((s, i) => (
-              <div
-                key={i}
-                className="relative overflow-hidden group"
-                style={{ height: s.tall ? '360px' : '220px', borderRadius: '2px' }}
-              >
-                <img
-                  src={s.img}
-                  alt={s.label}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  style={{ filter: 'brightness(0.45)' }}
-                />
-                <div
-                  className="absolute inset-0 transition-opacity duration-300"
-                  style={{ background: 'linear-gradient(to top, rgba(12,9,4,0.9) 0%, transparent 60%)' }}
-                />
-                <div className="absolute bottom-0 left-0 p-5">
-                  <p className="font-display text-lg font-light text-white">{s.label}</p>
-                  <p className="text-xs text-stone-400 mt-1">{s.sub}</p>
-                </div>
-              </div>
+              <Reveal key={i} delay={i * 0.08}>
+                <Tilt max={5} className="relative overflow-hidden group" style={{ height: s.tall ? '360px' : '220px', borderRadius: '2px' }}>
+                  <img
+                    src={s.img}
+                    alt={s.label}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    style={{ filter: 'brightness(0.45)' }}
+                  />
+                  <div
+                    className="absolute inset-0 transition-opacity duration-300"
+                    style={{ background: 'linear-gradient(to top, rgba(12,9,4,0.9) 0%, transparent 60%)' }}
+                  />
+                  <div className="absolute bottom-0 left-0 p-5">
+                    <p className="font-display text-lg font-light text-white">{s.label}</p>
+                    <p className="text-xs text-stone-400 mt-1">{s.sub}</p>
+                  </div>
+                </Tilt>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ══════════ TÉMOIGNAGES ══════════ */}
-      <section className="py-32 px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'var(--gold)' }}>Ce qu'ils disent</p>
-          <h2 className="font-display text-5xl font-light">Nos Clients</h2>
-          <div className="gold-line mt-6" />
-        </div>
+      {/* ══════════ STORY SCROLL — DU LIBAN À PARIS ══════════ */}
+      <OriginStory />
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            { nom: 'Fatima B.', note: '5/5', texte: 'Le houmous le plus crémeux que j\'aie mangé. Le service traiteur pour notre mariage était absolument parfait.' },
-            { nom: 'Marc D.', note: '5/5', texte: 'Un dépaysement total. Les grillades au charbon sont incroyables. Je reviens chaque semaine !' },
-            { nom: 'Leila K.', note: '5/5', texte: 'Comme à Beyrouth ! On se sent vraiment chez soi. La famille fait un travail remarquable, avec le cœur.' },
-          ].map((t, i) => (
-            <div
-              key={i}
-              className="glass p-8 relative"
-              style={{ borderRadius: '2px' }}
-            >
-              <div
-                className="font-display text-8xl font-light absolute top-2 left-5 leading-none pointer-events-none select-none"
-                style={{ color: 'rgba(201,168,76,0.1)' }}
-              >
-                "
-              </div>
-              <p className="text-stone-300 text-sm leading-relaxed mb-6 relative z-10 mt-6">
-                {t.texte}
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-sm" style={{ color: 'var(--gold)' }}>{t.nom}</span>
-                <span className="text-xs text-stone-600 tracking-widest">{t.note}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ══════════ AVIS CLIENTS ══════════ */}
+      <Reviews />
 
       {/* ══════════ CTA FINAL ══════════ */}
       <section className="relative overflow-hidden py-40 px-8 text-center">
@@ -245,7 +236,7 @@ export default function Home() {
           style={{ filter: 'brightness(0.2) saturate(0.5)' }}
         />
         <div className="absolute inset-0" style={{ background: 'rgba(12,9,4,0.6)' }} />
-        <div className="relative z-10">
+        <Reveal className="relative z-10">
           <p className="text-xs tracking-widest uppercase mb-4" style={{ color: 'var(--gold)' }}>Prêt à vivre l'expérience ?</p>
           <h2 className="font-display text-6xl md:text-8xl font-light mb-10">
             Réservez<br />
@@ -267,8 +258,90 @@ export default function Home() {
               Service Traiteur
             </Link>
           </div>
-        </div>
+        </Reveal>
       </section>
     </div>
+  );
+}
+
+function OriginStory() {
+  const [revealed, setRevealed] = useState(-1);
+
+  const steps = [
+    {
+      n: '01', title: 'L\'Origine',
+      desc: 'Huile d\'olive, sumac, zaatar, épices : nos ingrédients sont sélectionnés directement auprès de producteurs libanais, fidèles aux saveurs du pays.',
+      img: 'https://images.unsplash.com/photo-1445282768818-728615cc910a?auto=format&fit=crop&w=700&q=80',
+    },
+    {
+      n: '02', title: 'Le Fait Maison',
+      desc: 'Chaque matin dans notre cuisine parisienne, la famille prépare pains, mezzés et grillades, comme à Beyrouth, sans compromis.',
+      img: 'https://images.unsplash.com/photo-1466637574441-749b8f19452f?auto=format&fit=crop&w=700&q=80',
+    },
+    {
+      n: '03', title: 'Votre Table',
+      desc: 'De notre cuisine à votre assiette, ou installés chez vous pour votre événement — le voyage se termine avec vous.',
+      img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=700&q=80',
+    },
+  ];
+
+  const pct = revealed < 0 ? 0 : ((revealed + 1) / steps.length) * 100;
+
+  return (
+    <section className="py-28 px-8 max-w-5xl mx-auto">
+      <Reveal className="text-center mb-20">
+        <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'var(--gold)' }}>Notre Histoire</p>
+        <h2 className="font-display text-5xl font-light">
+          Du Liban <span className="italic text-gold-gradient">à Paris</span>
+        </h2>
+      </Reveal>
+
+      <div className="relative">
+        <div
+          className="hidden md:block absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px"
+          style={{ background: 'rgba(201,168,76,0.15)' }}
+        >
+          <div
+            className="absolute left-0 top-0 w-full"
+            style={{
+              height: `${pct}%`,
+              background: 'linear-gradient(to bottom, var(--gold), var(--gold-light))',
+              transition: 'height 0.8s cubic-bezier(0.22,1,0.36,1)',
+            }}
+          />
+        </div>
+
+        <div className="space-y-20 md:space-y-32">
+          {steps.map((s, i) => (
+            <Reveal key={s.n} className="relative" onReveal={() => setRevealed((r) => Math.max(r, i))}>
+              <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+                <Tilt max={6} style={{ order: i % 2 === 1 ? 2 : 1, borderRadius: '2px' }} className="relative h-64 md:h-72 overflow-hidden">
+                  <img
+                    src={s.img}
+                    alt={s.title}
+                    className="w-full h-full object-cover"
+                    style={{ filter: 'brightness(0.55)' }}
+                  />
+                </Tilt>
+                <div style={{ order: i % 2 === 1 ? 1 : 2 }} className={i % 2 === 1 ? 'md:text-right' : ''}>
+                  <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--gold)' }}>{s.n}</p>
+                  <h3 className="font-display text-3xl font-light mb-3" style={{ color: 'var(--text)' }}>{s.title}</h3>
+                  <p className="text-stone-400 text-sm leading-relaxed">{s.desc}</p>
+                </div>
+              </div>
+              <span
+                className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full z-10"
+                style={{
+                  background: revealed >= i ? 'var(--gold)' : 'var(--dark)',
+                  border: '2px solid var(--gold)',
+                  boxShadow: revealed >= i ? '0 0 14px rgba(201,168,76,0.7)' : 'none',
+                  transition: 'all 0.5s ease',
+                }}
+              />
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

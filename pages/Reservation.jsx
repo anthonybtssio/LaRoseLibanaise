@@ -1,7 +1,25 @@
 import { useState } from 'react';
+import emailjs from '@emailjs/browser';
+import Reveal from '../components/Reveal';
+
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
 const creneaux = ['12:00', '12:30', '13:00', '13:30', '19:00', '19:30', '20:00', '20:30', '21:00'];
 const today = new Date().toISOString().split('T')[0];
+
+// Hash déterministe : même date + créneau donnent toujours le même statut (simulation stable, pas de vrai stock).
+const seededRatio = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return (Math.abs(hash) % 100) / 100;
+};
+
+const isSlotBusy = (date, heure) => seededRatio(`${date}-${heure}`) < 0.38;
 
 const Field = ({ label, error, children }) => (
   <div>
@@ -13,6 +31,55 @@ const Field = ({ label, error, children }) => (
   </div>
 );
 
+const AvailabilityGrid = ({ date, heure, onSelect }) => {
+  if (!date) {
+    return (
+      <p className="text-xs" style={{ color: 'var(--muted)' }}>
+        Choisissez une date pour voir les disponibilités en direct.
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      <div className="grid grid-cols-3 gap-2">
+        {creneaux.map((h) => {
+          const busy = isSlotBusy(date, h);
+          const selected = heure === h;
+          return (
+            <button
+              type="button"
+              key={h}
+              disabled={busy}
+              onClick={() => onSelect(h)}
+              className="relative py-2.5 text-xs tracking-wide transition-all duration-200"
+              style={{
+                borderRadius: '1px',
+                border: `1px solid ${selected ? 'var(--gold)' : busy ? 'rgba(201,168,76,0.08)' : 'rgba(201,168,76,0.3)'}`,
+                background: selected ? 'var(--gold)' : 'transparent',
+                color: selected ? '#0c0904' : busy ? 'var(--muted)' : 'var(--text)',
+                opacity: busy ? 0.45 : 1,
+                cursor: busy ? 'not-allowed' : 'pointer',
+                textDecoration: busy ? 'line-through' : 'none',
+              }}
+            >
+              {h}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex items-center gap-5 mt-4 text-xs" style={{ color: 'var(--muted)' }}>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full" style={{ background: 'var(--gold)' }} /> Disponible
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full" style={{ background: 'var(--muted)' }} /> Complet
+        </span>
+      </div>
+    </div>
+  );
+};
+
 export default function Reservation() {
   const [type, setType] = useState('restaurant');
   const [form, setForm] = useState({
@@ -22,8 +89,11 @@ export default function Reservation() {
   });
   const [errors, setErrors] = useState({});
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
 
   const set = (field) => (e) => setForm((p) => ({ ...p, [field]: e.target.value }));
+  const setDate = (e) => setForm((p) => ({ ...p, date: e.target.value, heure: '' }));
 
   const validate = () => {
     const e = {};
@@ -34,12 +104,38 @@ export default function Reservation() {
     return e;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setErrors({});
-    setSent(true);
+    setSendError('');
+    setSending(true);
+
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          type: type === 'restaurant' ? 'Table Restaurant' : 'Événement Traiteur',
+          nom: form.nom,
+          prenom: form.prenom,
+          tel: form.tel,
+          email: form.email,
+          date: form.date,
+          heure: form.heure || '—',
+          personnes: form.personnes,
+          eventType: type === 'traiteur' ? form.eventType : '—',
+          message: form.message,
+        },
+        { publicKey: EMAILJS_PUBLIC_KEY }
+      );
+      setSent(true);
+    } catch (err) {
+      setSendError("Une erreur est survenue lors de l'envoi. Merci de réessayer ou de nous appeler directement.");
+    } finally {
+      setSending(false);
+    }
   };
 
   if (sent) {
@@ -89,7 +185,7 @@ export default function Reservation() {
         >
           RÉSERVER
         </div>
-        <div className="max-w-3xl relative z-10">
+        <Reveal className="max-w-3xl relative z-10">
           <p className="text-xs tracking-widest uppercase mb-4" style={{ color: 'var(--gold)' }}>Réservation</p>
           <h1 className="font-display text-6xl md:text-7xl font-light leading-none mb-6">
             Une Table,<br />
@@ -98,7 +194,7 @@ export default function Reservation() {
           <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>
             Réservez votre table au restaurant ou planifiez votre événement traiteur. Confirmation sous 24h.
           </p>
-        </div>
+        </Reveal>
       </div>
 
       <div className="max-w-2xl mx-auto px-8 pt-20 pb-32">
@@ -150,14 +246,13 @@ export default function Reservation() {
           {/* DATE / HEURE OU EVENT */}
           <div className="grid grid-cols-2 gap-5">
             <Field label="Date souhaitée *" error={errors.date}>
-              <input type="date" value={form.date} min={today} onChange={set('date')} className="input-dark" />
+              <input type="date" value={form.date} min={today} onChange={setDate} className="input-dark" />
             </Field>
             {type === 'restaurant' ? (
-              <Field label="Heure *" error={errors.heure}>
-                <select value={form.heure} onChange={set('heure')} className="input-dark">
-                  <option value="">Choisir un créneau</option>
-                  {creneaux.map((h) => <option key={h} value={h}>{h}</option>)}
-                </select>
+              <Field label="Créneau choisi *" error={errors.heure}>
+                <div className="input-dark flex items-center" style={{ color: form.heure ? 'var(--gold)' : 'var(--muted)' }}>
+                  {form.heure || 'À sélectionner ci-dessous'}
+                </div>
               </Field>
             ) : (
               <Field label="Type d'événement">
@@ -169,6 +264,19 @@ export default function Reservation() {
               </Field>
             )}
           </div>
+
+          {type === 'restaurant' && (
+            <div>
+              <label className="text-xs tracking-widest uppercase block mb-3" style={{ color: 'var(--gold)' }}>
+                Disponibilité en direct
+              </label>
+              <AvailabilityGrid
+                date={form.date}
+                heure={form.heure}
+                onSelect={(h) => setForm((p) => ({ ...p, heure: h }))}
+              />
+            </div>
+          )}
 
           {/* CONVIVES */}
           <Field label="Nombre de personnes">
@@ -199,12 +307,16 @@ export default function Reservation() {
           </Field>
 
           {/* SUBMIT */}
+          {sendError && (
+            <p className="text-xs text-center" style={{ color: '#e05c5c' }}>{sendError}</p>
+          )}
           <button
             type="submit"
-            className="w-full py-4 text-sm tracking-widest uppercase font-medium transition-all duration-300 hover:opacity-85"
+            disabled={sending}
+            className="w-full py-4 text-sm tracking-widest uppercase font-medium transition-all duration-300 hover:opacity-85 disabled:opacity-50"
             style={{ background: 'var(--gold)', color: '#0c0904' }}
           >
-            {type === 'restaurant' ? 'Confirmer ma réservation' : 'Envoyer ma demande'}
+            {sending ? 'Envoi en cours...' : type === 'restaurant' ? 'Confirmer ma réservation' : 'Envoyer ma demande'}
           </button>
 
           <p className="text-center text-xs" style={{ color: 'var(--muted)' }}>
